@@ -1,0 +1,225 @@
+{
+    "info": {
+        "_postman_id": "2092737b-7cf9-4787-8cd2-399fd8e72e00",
+        "name": "Passive Liveness Service",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "23990514"
+    },
+    "item": [
+        {
+            "name": "Evaluate Passive Liveness with image upload",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "X-Request-ID",
+                        "value": "{{$randomUUID}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"selfie\": {\n        \"image\": {\n            \"data\": \"\"\n        }\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{passive-liveness-service}}/api/v1/liveness/passive/evaluation",
+                    "host": [
+                        "{{passive-liveness-service}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "liveness",
+                        "passive",
+                        "evaluation"
+                    ]
+                }
+            },
+            "response": [
+                {
+                    "name": "Evaluate Passive Liveness with image upload",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-Request-ID",
+                                "value": "{{$randomUUID}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"selfie\": {\n        \"image\": {\n            \"data\": \"\"\n        }\n    }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{passive-liveness-service}}/api/v1/liveness/passive/evaluation",
+                            "host": [
+                                "{{passive-liveness-service}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "liveness",
+                                "passive",
+                                "evaluation"
+                            ]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "date",
+                            "value": "Wed, 31 Aug 2022 12:53:45 GMT"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        },
+                        {
+                            "key": "content-length",
+                            "value": "20"
+                        },
+                        {
+                            "key": "connection",
+                            "value": "keep-alive"
+                        }
+                    ],
+                    "cookie": [],
+                    "body": "{\n    \"score\": 0.93032366\n}"
+                }
+            ]
+        },
+        {
+            "name": "Actuator - Health",
+            "request": {
+                "auth": {
+                    "type": "noauth"
+                },
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-Request-ID",
+                        "value": "{{$randomUUID}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{passive-liveness-service}}/api/v1/health",
+                    "host": [
+                        "{{passive-liveness-service}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "health"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Actuator - Info",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{passive-liveness-service}}/api/v1/info",
+                    "host": [
+                        "{{passive-liveness-service}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "info"
+                    ]
+                }
+            },
+            "response": []
+        }
+    ],
+    "auth": {
+        "type": "oauth2",
+        "oauth2": [
+            {
+                "key": "accessTokenUrl",
+                "value": "{{oauth_token_url}}",
+                "type": "string"
+            },
+            {
+                "key": "audience",
+                "value": {
+                    "5eab91f8-30aa-4735-8368-0bfa85e1341a": "{{oauth_audience}}"
+                },
+                "type": "any"
+            },
+            {
+                "key": "clientSecret",
+                "value": "{{oauth_client_secret}}",
+                "type": "string"
+            },
+            {
+                "key": "clientId",
+                "value": "{{oauth_client_id}}",
+                "type": "string"
+            },
+            {
+                "key": "tokenName",
+                "value": "Bearer",
+                "type": "string"
+            },
+            {
+                "key": "challengeAlgorithm",
+                "value": "S256",
+                "type": "string"
+            },
+            {
+                "key": "grant_type",
+                "value": "client_credentials",
+                "type": "string"
+            },
+            {
+                "key": "addTokenTo",
+                "value": "header",
+                "type": "string"
+            },
+            {
+                "key": "client_authentication",
+                "value": "header",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        }
+    ]
+}
+
