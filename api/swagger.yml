@@ -1,21 +1,56 @@
 openapi: 3.0.1
 info:
   title: Passive Liveness Service
-  version: 1.2.0
+  version: 2.1.0
 paths:
   /api/v1/health:
     get:
-      summary: Get Health Status
-      description: Returns the health status of the application
-      operationId: getResult
+      tags:
+      - Actuator
+      operationId: getHealth
       responses:
         "200":
-          description: OK response
+          description: getHealth 200 response
           content:
             application/json:
               schema:
-                type: string
-                description: Health check response
+                type: array
+                items:
+                  $ref: "#/components/schemas/HealthResult"
+  /api/v1/health/{selector}:
+    get:
+      tags:
+      - Actuator
+      operationId: getHealth_1
+      parameters:
+      - name: selector
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/HealthCheckType"
+      responses:
+        "200":
+          description: getHealth_1 200 response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HealthResult"
+  /api/v1/info:
+    get:
+      tags:
+      - Actuator
+      operationId: getInfo
+      responses:
+        "200":
+          description: getInfo 200 response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
   /api/v1/liveness/passive/evaluation:
     post:
       tags:
@@ -26,7 +61,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PassiveLivenessEvaluationRequest'
+              $ref: "#/components/schemas/PassiveLivenessEvaluationRequest"
         required: true
       responses:
         "200":
@@ -34,7 +69,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PassiveLivenessEvaluationResponse'
+                $ref: "#/components/schemas/PassiveLivenessEvaluationResponse"
         "400":
           description: |-
             Bad request
@@ -45,7 +80,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: |-
             Internal Server Error
@@ -55,7 +90,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
       security:
       - BearerAuthorization: []
 components:
@@ -80,16 +115,49 @@ components:
       type: object
       properties:
         errorCode:
+          description: Error code
+          readOnly: true
           allOf:
-          - $ref: '#/components/schemas/ErrorCode'
-          - description: Error code
-            readOnly: true
+          - $ref: "#/components/schemas/ErrorCode"
         errorMessage:
           type: string
           description: Error detailed description. It's only informative.
           readOnly: true
       description: Error response
       readOnly: true
+    HealthCheckType:
+      type: string
+      enum:
+      - LIVENESS
+      - READINESS
+    HealthResult:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          $ref: "#/components/schemas/HealthStatus"
+        details: {}
+    HealthStatus:
+      required:
+      - description
+      - name
+      - operational
+      - severity
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        operational:
+          type: boolean
+          nullable: true
+        severity:
+          type: integer
+          format: int32
+          nullable: true
     PassiveLivenessEvaluationRequest:
       required:
       - selfie
@@ -97,8 +165,8 @@ components:
       properties:
         selfie:
           allOf:
-          - $ref: '#/components/schemas/PassiveLivenessEvaluationRequest.SelfieDTO'
-          - readOnly: false
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationRequest.SelfieDTO"
+          - writeOnly: true
       writeOnly: true
     PassiveLivenessEvaluationRequest.ImageDTO:
       required:
@@ -109,7 +177,6 @@ components:
           minItems: 1
           type: string
           description: The data bytes as Base64 encoded string.
-          readOnly: false
           writeOnly: true
       description: Image provided as Base64 encoded string.
       writeOnly: true
@@ -120,8 +187,8 @@ components:
       properties:
         image:
           allOf:
-          - $ref: '#/components/schemas/PassiveLivenessEvaluationRequest.ImageDTO'
-          - readOnly: false
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationRequest.ImageDTO"
+          - writeOnly: true
       writeOnly: true
     PassiveLivenessEvaluationResponse:
       type: object
@@ -136,14 +203,14 @@ components:
           example: 0.8
         errors:
           nullable: true
+          readOnly: true
           allOf:
-          - $ref: '#/components/schemas/PassiveLivenessEvaluationResponse.PassiveLivenessErrors'
-          - readOnly: true
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.PassiveLivenessErrors"
         warnings:
           nullable: true
+          readOnly: true
           allOf:
-          - $ref: '#/components/schemas/PassiveLivenessEvaluationResponse.PassiveLivenessWarnings'
-          - readOnly: true
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.PassiveLivenessWarnings"
       description: Response.
       readOnly: true
     PassiveLivenessEvaluationResponse.PassiveLivenessErrors:
@@ -156,7 +223,7 @@ components:
           description: The error
           readOnly: true
           items:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
       readOnly: true
     PassiveLivenessEvaluationResponse.PassiveLivenessWarnings:
       required:
@@ -168,7 +235,7 @@ components:
           description: The warnings
           readOnly: true
           items:
-            $ref: '#/components/schemas/Warning'
+            $ref: "#/components/schemas/Warning"
       readOnly: true
     Warning:
       type: string
@@ -179,4 +246,3 @@ components:
     BearerAuthorization:
       type: http
       scheme: bearer
-
