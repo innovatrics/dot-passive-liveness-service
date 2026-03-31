@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Passive Liveness Service
-  version: 2.1.0
+  version: 2.2.0
 paths:
   /api/v1/health:
     get:
@@ -137,7 +137,8 @@ components:
           type: string
         status:
           $ref: "#/components/schemas/HealthStatus"
-        details: {}
+        details:
+          type: object
     HealthStatus:
       required:
       - description
@@ -166,7 +167,8 @@ components:
         selfie:
           allOf:
           - $ref: "#/components/schemas/PassiveLivenessEvaluationRequest.SelfieDTO"
-          - writeOnly: true
+          - type: object
+            writeOnly: true
       writeOnly: true
     PassiveLivenessEvaluationRequest.ImageDTO:
       required:
@@ -174,7 +176,6 @@ components:
       type: object
       properties:
         data:
-          minItems: 1
           type: string
           description: The data bytes as Base64 encoded string.
           writeOnly: true
@@ -188,31 +189,123 @@ components:
         image:
           allOf:
           - $ref: "#/components/schemas/PassiveLivenessEvaluationRequest.ImageDTO"
-          - writeOnly: true
+          - type: object
+            writeOnly: true
       writeOnly: true
     PassiveLivenessEvaluationResponse:
+      required:
+      - faces
+      - score
       type: object
       properties:
         score:
           maximum: 1
           minimum: 0
           type: number
-          description: The liveness score.
+          description: "The passive liveness score computed for the detected face\
+            \ identified by `evaluatedFaceId`. Values range from 0.0 to 1.0, where\
+            \ values closer to 1.0 indicate a higher probability that the evaluated\
+            \ face is live."
           format: float
           readOnly: true
           example: 0.8
+        evaluatedFaceId:
+          type: string
+          description: Identifier of the detected face on which the liveness `score`
+            was computed. This value corresponds to the `faceId` of one of the items
+            in the `faces` list.
+          nullable: true
+          readOnly: true
+        faces:
+          type: array
+          description: List of detected faces in the image.
+          readOnly: true
+          items:
+            $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.DetectedFace"
         errors:
+          type: object
           nullable: true
           readOnly: true
           allOf:
           - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.PassiveLivenessErrors"
+          - type: object
         warnings:
+          type: object
           nullable: true
           readOnly: true
           allOf:
           - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.PassiveLivenessWarnings"
-      description: Response.
+          - type: object
       readOnly: true
+    PassiveLivenessEvaluationResponse.DetectedFace:
+      required:
+      - detection
+      - faceId
+      type: object
+      properties:
+        faceId:
+          type: string
+          description: Unique identifier of the detected face.
+          readOnly: true
+        detection:
+          description: Result of the face detection.
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.FaceDetection"
+      description: Detected face information.
+      readOnly: true
+    PassiveLivenessEvaluationResponse.FaceCorners:
+      required:
+      - bottomLeft
+      - bottomRight
+      - topLeft
+      - topRight
+      type: object
+      properties:
+        topLeft:
+          description: "Top left corner of the detected face, in relative coordinates"
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.Point"
+        topRight:
+          description: "Top right corner of the detected face, in relative coordinates"
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.Point"
+        bottomRight:
+          description: "Bottom right corner of the detected face, in relative coordinates"
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.Point"
+        bottomLeft:
+          description: "Bottom left corner of the detected face, in relative coordinates"
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.Point"
+      readOnly: true
+    PassiveLivenessEvaluationResponse.FaceDetection:
+      required:
+      - confidence 
+      - corners
+      type: object
+      properties:
+        confidence:
+          maximum: 1
+          minimum: 0
+          type: number
+          description: "The face detection confidence. Values range from 0.0 to 1.0,\
+            \ where values closer to 1.0 indicate higher confidence that a human face\
+            \ was detected."
+          format: float
+          readOnly: true
+          example: 0.84
+        corners:
+          description: The normalized corner coordinates of the detected face region.
+            Coordinates are relative to the image dimensions and range from 0.0 to
+            1.0.
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.FaceCorners"
     PassiveLivenessEvaluationResponse.PassiveLivenessErrors:
       required:
       - selfie
@@ -220,7 +313,7 @@ components:
       properties:
         selfie:
           type: array
-          description: The error
+          description: The errors
           readOnly: true
           items:
             $ref: "#/components/schemas/Error"
@@ -236,6 +329,32 @@ components:
           readOnly: true
           items:
             $ref: "#/components/schemas/Warning"
+      readOnly: true
+    PassiveLivenessEvaluationResponse.Point:
+      required:
+      - x
+      - "y"
+      type: object
+      properties:
+        x:
+          maximum: 1
+          minimum: 0
+          type: number
+          description: "Normalized x-axis coordinate of the point, relative to the\
+            \ image width"
+          format: float
+          readOnly: true
+          example: 0.67
+        "y":
+          maximum: 1
+          minimum: 0
+          type: number
+          description: "Normalized y-axis coordinate of the point, relative to the\
+            \ image height"
+          format: float
+          readOnly: true
+          example: 0.42
+      description: The point coordinates.
       readOnly: true
     Warning:
       type: string
