@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Passive Liveness Service
-  version: 2.2.0
+  version: 2.3.0
 paths:
   /api/v1/health:
     get:
@@ -93,8 +93,167 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
       - BearerAuthorization: []
+  /api/v1/liveness/passive/evaluation/binary:
+    post:
+      tags:
+      - Liveness
+      summary: Evaluate video injection and passive liveness
+      operationId: evaluateBinary
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+              - binary
+              type: object
+              properties:
+                binary:
+                  type: string
+                  format: binary
+            encoding:
+              binary:
+                contentType: application/octet-stream
+                explode: false
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BinaryEvaluationResponse"
+        "400":
+          description: |-
+            Bad request
+
+            Possible error codes:
+             - INVALID_IMAGE
+             - INVALID_REQUEST_BODY
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: |-
+            Internal Server Error
+
+            Possible error codes:
+             - UNEXPECTED_ERROR
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - BearerAuthorization: []
 components:
   schemas:
+    BinaryEvaluationResponse:
+      required:
+      - videoInjectionEvaluation
+      type: object
+      properties:
+        captureInfo:
+          nullable: true
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/BinaryEvaluationResponse.CaptureInfo"
+        extractedImage:
+          nullable: true
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/BinaryEvaluationResponse.ImageRecord"
+        passiveLivenessEvaluation:
+          nullable: true
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse"
+        videoInjectionEvaluation:
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/BinaryEvaluationResponse.VideoInjectionEvaluation"
+      readOnly: true
+    BinaryEvaluationResponse.CaptureInfo:
+      type: object
+      properties:
+        libraryVersion:
+          type: string
+          description: Version of the SDK library used for capture.
+          nullable: true
+          readOnly: true
+        library:
+          nullable: true
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/BinaryEvaluationResponse.LibraryType"
+      description: Information about the SDK library used to capture the binary.
+      readOnly: true
+    BinaryEvaluationResponse.ImageRecord:
+      required:
+      - bytes
+      - imageRecordType
+      type: object
+      properties:
+        bytes:
+          type: string
+          description: "Raw bytes of the extracted image, Base64 encoded."
+          format: binary
+          readOnly: true
+        imageRecordType:
+          readOnly: true
+          allOf:
+          - $ref: "#/components/schemas/BinaryEvaluationResponse.ImageRecordType"
+      description: An image extracted from the evaluated binary.
+      readOnly: true
+    BinaryEvaluationResponse.ImageRecordType:
+      type: string
+      description: "The type of the extracted image record, indicating what the image\
+        \ depicts."
+      readOnly: true
+      enum:
+      - FACE
+      - PALM
+      - DOCUMENT
+      - FACE_VERIFICATION_SELFIE
+      - DISTANT
+      - MIDDLE
+      - CLOSEUP
+      - SMILE
+      - NEUTRAL
+      - TOP_LEFT
+      - TOP_RIGHT
+      - BOTTOM_RIGHT
+      - BOTTOM_LEFT
+      - FACE_SIZE_ZERO
+      - FACE_SIZE_ONE
+      - FACE_SIZE_TWO
+      - FACE_SIZE_THREE
+      - FACE_SIZE_FOUR
+      - FACE_SIZE_FIVE
+    BinaryEvaluationResponse.LibraryType:
+      type: string
+      description: The SDK library type used to capture the binary.
+      readOnly: true
+      enum:
+      - ANDROID
+      - IOS
+      - WEB
+    BinaryEvaluationResponse.VideoInjectionEvaluation:
+      type: object
+      properties:
+        isGenuine:
+          type: boolean
+          description: Boolean value indicating whether the image is genuine or not.
+          nullable: true
+          readOnly: true
+        warnings:
+          type: array
+          description: Optional list of warnings generated during the evaluation
+          nullable: true
+          readOnly: true
+          items:
+            type: string
+      description: Result of the video injection evaluation.
+      readOnly: true
     Error:
       type: string
       enum:
@@ -102,12 +261,13 @@ components:
     ErrorCode:
       type: string
       enum:
-      - NOT_FOUND
-      - INTERNAL_SERVER_ERROR
-      - UNAUTHORIZED
-      - METHOD_NOT_ALLOWED
-      - INVALID_IMAGE
       - BAD_REQUEST
+      - INTERNAL_SERVER_ERROR
+      - INVALID_IMAGE
+      - INVALID_FILE
+      - METHOD_NOT_ALLOWED
+      - NOT_FOUND
+      - UNAUTHORIZED
     ErrorResponse:
       required:
       - errorCode
@@ -228,14 +388,12 @@ components:
           readOnly: true
           allOf:
           - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.PassiveLivenessErrors"
-          - type: object
         warnings:
           type: object
           nullable: true
           readOnly: true
           allOf:
           - $ref: "#/components/schemas/PassiveLivenessEvaluationResponse.PassiveLivenessWarnings"
-          - type: object
       readOnly: true
     PassiveLivenessEvaluationResponse.DetectedFace:
       required:
@@ -285,7 +443,6 @@ components:
       readOnly: true
     PassiveLivenessEvaluationResponse.FaceDetection:
       required:
-      - confidence 
       - corners
       type: object
       properties:
